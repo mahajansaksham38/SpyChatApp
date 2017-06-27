@@ -2,6 +2,7 @@ from spy_details import spy,Spy,friends,ChatMessage
 from steganography.steganography import Steganography
 from datetime import datetime
 from termcolor import colored
+import os.path
 
 STATUS_MESSAGE=['My name is Bond, James Bond', 'Shaken, not stirred.', 'Keeping the British end up, Sir']
 
@@ -66,11 +67,12 @@ def valid_age():
                     else:
                         pass
             else:
-                age = float(age)
+                age = int(age)
             break
         except ValueError:
             print colored("Please enter valid rating of spy", 'red')
             pass
+
     return age
 
 
@@ -100,11 +102,13 @@ def add_status(status_message):                                                 
         for message in STATUS_MESSAGE:                                                            #for loop for printing out old statuses
             print str(item_number)+' '+str(message)
             item_number+=1
-        status_selection=int(raw_input("Choose from above statuses: "))                           #asking user for status selection
-        if len(STATUS_MESSAGE)>= status_selection:
-            updated_message=STATUS_MESSAGE[status_selection-1]
-        else:
-            print "You didn't select valid option"
+        status_selection=raw_input("Choose from above statuses: ")                           #asking user for status selection
+        if status_selection.isspace()==False and len(status_selection)>0:
+            if len(STATUS_MESSAGE)>= int(status_selection):
+                updated_message=STATUS_MESSAGE[int(status_selection)-1]
+            else:
+                print "You didn't select valid option"
+
     else:
         print "The option you chose is not valid ! Press y or n. "
 
@@ -140,7 +144,6 @@ def add_friend():
 def select_friend():
 
     item_number = 0
-
     #for loop iterate through friends list and print the list of friends
     for friend in friends:
         print '%d. %s aged %d with rating %.2f is online' % (item_number + 1, friend.name,
@@ -149,38 +152,74 @@ def select_friend():
         item_number = item_number + 1
 
     friend_choice = raw_input("Choose from your friends")
-    friend_choice_position = int(friend_choice) - 1
-    return friend_choice_position
+    if len(friend_choice)>0 and friend_choice.isdigit():
+            friend_choice=int(friend_choice)
+            if friend_choice<item_number+1:
+                friend_choice_position = friend_choice - 1
+                return friend_choice_position
+            else:
+                print 'Choose number between (1--%s)' %(item_number)
+                return False
+    elif len(friend_choice)==0 or friend_choice.isspace()==True:
+            print 'Choose number between (1--%s)' % (item_number)
+            return None
+    else:
+            print 'Choose number between (1--%s)' %(item_number)
+
+
+
 
 #function to send message using encode() METHOD  of Steganography
 def send_message():                                             #calling select_friend() and stores the index in friend_choice
     friend_choice = select_friend()
-
-    original_image = raw_input("What is the name of the image?")
-    output_path = "output.jpg"
-    text = raw_input("What do you want to say? ")               #asking input message to be sent
-    Steganography.encode(original_image, output_path, text)
-    new_chat = ChatMessage(text, True)
-    friends[friend_choice].chats.append(new_chat)
-    print "Your secret message image is ready"
+    if friend_choice==None:
+        print colored("Try again",'blue')
+    else:
+        original_image = raw_input("What is the name of the image?")
+        if os.path.isfile(original_image):
+            output_path = "output.jpg"
+            text = raw_input("What do you want to say? ")       #asking input message to be sent
+            if len(text)>0 and text.isspace()==False:
+                Steganography.encode(original_image, output_path, text)
+                new_chat = ChatMessage(text, True)
+                friends[friend_choice].chats.append(new_chat)
+                print "Your secret message image is ready"
+            else:
+                print colored("Oops! Seems like your message has no text. Try again!",'red')
+        else:
+            print colored("Path you provided for image was not valid.",'red')
 
 #function to read message using decode() method of Steganography
 def read_message():
 
     sender = select_friend()
-    output_path = raw_input("What is the name of the file?")
-    secret_text = Steganography.decode(output_path)     #decode() takes path of encoded image and return the decoded message
-    if secret_text.upper()=='SOS' or secret_text=='SAVE ME' or secret_text=='NEED HELP':
-        print colored('Alert! This is emergency message: '+ secret_text,'red')
+    if sender==None:
+        print colored("Try again", 'blue')
+    else:
+        output_path = raw_input("What is the name of the file?")
+        if os.path.isfile(output_path):
+            secret_text = Steganography.decode(output_path)     #decode() takes path of encoded image and return the decoded message
+            if len(secret_text)>0 or secret_text.isspace()==False:
+                special_words=['SOS','SAVE ME','NEED HELP']
+                if secret_text.upper() in special_words:
+                    print colored('Alert! This is emergency message: '+ secret_text,'red')
 
-    words=secret_text.split()
-    average = float(sum(len(word) for word in words)) / len(words)
-    friends[sender].word_count=average
-    print "Average word count is: " +str(friends[sender].word_count)
+                words=secret_text.split()
+                average = float(sum(len(word) for word in words)) / len(words)
+                friends[sender].word_count=average
 
-    new_chat = ChatMessage(secret_text, False)
-    friends[sender].chats.append(new_chat)              #appends the new_chat object details to chats list of friend
-    print "Your secret message has been saved!"
+                print "Average word count is: " +str(friends[sender].word_count)
+                new_chat = ChatMessage(secret_text, False)
+                friends[sender].chats.append(new_chat)              #appends the new_chat object details to chats list of friend
+                print "Your secret message has been saved!"
+
+                if len(secret_text.split())>100:
+                    print colored("You are speaking to much.We are deleting you.",'red')
+                    friends.pop(sender)
+            else:
+                print colored("Looks like your message is empty.Try again",'red')
+        else:
+            print colored("Path you provided for image was not valid.", 'red')
 
 #function to read chat history
 def read_chat_history():
@@ -210,15 +249,23 @@ def start_chat(spy):
         print "Authentication complete. Welcome " + spy.name+ " age: " + str(spy.age) + " and rating of: " + str(
             spy.rating) + " Proud to have you onboard"
 
+        if spy.rating > 4.5:
+            print 'Great ace!'
+        elif spy.rating > 3.5 and spy.rating <= 4.5:
+            print 'You are one of the good ones.'
+        elif spy.rating >= 2.5 and spy.rating <= 3.5:
+            print 'You can always do better'
+        else:
+            print 'We can always use somebody to help in the office.'
+
         show_menu = True
 
         while show_menu:
             menu_choices = "What do you want to do? \n 1. Add a status update \n 2. Add a friend \n 3. Send a secret message \n 4. Read a secret message \n 5. Read Chats from a user \n 6. Close Application \n"
             menu_choice = raw_input(menu_choices)
 
-            if len(menu_choice) > 0:
+            if len(menu_choice) > 0 and menu_choice.isspace()==False:
                 menu_choice = int(menu_choice)
-
                 if menu_choice == 1:
                     print 'You chose to update the status'
                     current_status_message=add_status(current_status_message)      #call add_status function with current status as argument
@@ -236,6 +283,8 @@ def start_chat(spy):
                     exit()
                 else:
                     print colored("Enter correct choice",'red')
+            else:
+                print colored('Please enter a valid option','red')
     else:
         print 'Sorry you are not of the correct age to be a spy'
 
