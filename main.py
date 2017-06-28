@@ -5,32 +5,26 @@ from termcolor import colored
 import os.path
 
 STATUS_MESSAGE=['My name is Bond, James Bond', 'Shaken, not stirred.', 'Keeping the British end up, Sir']
+SALUTAIONS=['MR.','MRS.','DR.','ADV.','MISS.']
 
 print "Hello! Let\'s get started"
 
 
 def valid_name(name):
-    if len(name) == 0 or (name).isspace() == True or name.isalnum()==False:
-        # keep executing the loop until Spy enters his name
-        while True:
-            print colored("WARNING: Please enter your name to continue:", 'red')
-            name = raw_input("Please enter a name: \t")
-            if len(name)!= 0 and name.isspace() == False and name.isalnum()==True:
-                break
+        name=name.strip()
+        name1=name.split(" ")
+        a=0
+        b=0
+        for i in name1:
+            if(i.isalpha()):
+                a +=1
             else:
-                pass
-    return name
+                b+=1
+        if (b>0):
+            return False
+        elif(b==0):
+            return True
 
-def valid_salutation(sal):
-    if len(sal) == 0 or (sal).isspace() == True:
-        while True:
-            print colored("WARNING: Please enter salutation for spy.", 'red')
-            sal = raw_input("Should I call you Mr. or Mrs. ? :\t")
-            if len(sal) != 0 and sal.isspace() == False:
-                break
-            else:
-                pass
-    return sal
 
 def valid_rating():
     while True:
@@ -125,19 +119,27 @@ def add_friend():
     new_friend = Spy("","",0,0)    #initializing object to empty values
 
     #asking input from user
-    name = raw_input("Please add your friend's name: ")
-    new_friend.name=valid_name(name)
-    salutation= raw_input("Are they Mr. or Ms.?: ")
-    new_friend.salutation=valid_salutation(salutation)
-    new_friend.name = new_friend.salutation + " " + new_friend.name
-    new_friend.age=valid_age()
-    new_friend.rating = valid_rating()
-    #validating inputs from user and appending to friend list
-    if new_friend.age> 12 and new_friend.rating >= spy.rating:
-        friends.append(new_friend)
-        print 'Friend Added!'
+    name = raw_input("Welcome, Please enter your spy name: ")
+    name_check = valid_name(name)
+    if name_check == True:
+        salutation= raw_input("Are they Mr. or Ms.?: ")
+        if salutation.upper() in SALUTAIONS:
+            new_friend.salutation=salutation
+            new_friend.name = new_friend.salutation + " " + name
+            new_friend.age=valid_age()
+            new_friend.rating = valid_rating()
+            #validating inputs from user and appending to friend list
+            if new_friend.age> 12 and new_friend.rating >= spy.rating:
+                friends.append(new_friend)
+                print 'Friend Added!'
+            else:
+                print 'Sorry! Invalid entry. We can\'t add spy with the details you provided'
+        else:
+            print colored("Invalid salutation!!",'red')
+            print colored("Choose from: 'MR.','MRS.','DR.','ADV.','MISS.' ",'blue')
+
     else:
-        print 'Sorry! Invalid entry. We can\'t add spy with the details you provided'
+        print colored("Entered name is not valid. Try again!",'red')
     return len(friends)
 
 #making select_friend() function to select friend returns index of friend in friends list
@@ -200,15 +202,16 @@ def read_message():
         if os.path.isfile(output_path):
             secret_text = Steganography.decode(output_path)     #decode() takes path of encoded image and return the decoded message
             if len(secret_text)>0 or secret_text.isspace()==False:
+
                 special_words=['SOS','SAVE ME','NEED HELP']
                 if secret_text.upper() in special_words:
                     print colored('Alert! This is emergency message: '+ secret_text,'red')
 
                 words=secret_text.split()
-                average = float(sum(len(word) for word in words)) / len(words)
-                friends[sender].word_count=average
+                friends[sender].average=(float(friends[sender].average*len(friends[sender].chats)+len(words)))/(len(friends[sender].chats)+1)
+                print "Average word count is: %.2f" %(friends[sender].average)
 
-                print "Average word count is: " +str(friends[sender].word_count)
+
                 new_chat = ChatMessage(secret_text, False)
                 friends[sender].chats.append(new_chat)              #appends the new_chat object details to chats list of friend
                 print "Your secret message has been saved!"
@@ -272,6 +275,7 @@ def start_chat(spy):
                 elif menu_choice == 2:
                     print "You selected option to add a friend"
                     number_of_friends=  add_friend()                               #call add_friend function
+
                     print 'You have %d friend(s)' %(number_of_friends)
                 elif menu_choice == 3:
                     send_message()                                                 #call to send_message funtion if choice is 3
@@ -299,17 +303,28 @@ while True:
     #else user will enter new spy details to continue
     elif existing.upper()=="N":
 
-            spy=Spy("","",0,0)
-            name = raw_input("Welcome to spy chat, you must tell me your spy name first: ")
-            spy.name= valid_name(name)
+            name=raw_input("Welcome, Please enter your spy name: ")
+            name_check=valid_name(name)
+            if name_check==True:
+                salutation = raw_input("Should I call you Mr. or Mrs. ? :\t")
+                if salutation.upper() in SALUTAIONS:
 
+                    spy.age = valid_age()
+                    if spy.age<50 and spy.age>12:
+                        spy.name = name
+                        spy.salutation = salutation
+                        spy.rating=valid_rating()
+                        start_chat(spy)
+                    else:
+                        print colored("Sorry you are not of correct age to be a spy!!",'red')
+                        exit()
+                else:
+                    print colored("Invalid salutation!!", 'red')
+                    print colored("Choose from: 'MR.','MRS.','DR.','ADV.','MISS.' ", 'blue')
 
-            salutation = raw_input("Should I call you Mr. or Mrs. ? :\t")
-            spy.salutation=valid_salutation(salutation)
+            else:
+                print colored("Entered name is not valid. Try again!",'red')
 
-            spy.age = valid_age()
-            spy.rating=valid_rating()
-            start_chat(spy)
 
     else:
         print colored("Please choose from y or n",'red')
