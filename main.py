@@ -335,7 +335,7 @@ while True:
                         start_chat(spy)
                     else:                                                                    #if age is not correct prints message
                         print colored("Sorry you are not of correct age to be a spy!!",'red')
-                        exit()
+       
                 else:                                                                        #if salutation is not in list then print message
                     print colored("Invalid salutation!!", 'red')
                     print colored("Choose from: 'MR.','MRS.','DR.','ADV.','MISS.' ,'ER.'", 'blue')
