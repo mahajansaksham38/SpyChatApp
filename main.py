@@ -132,7 +132,7 @@ def add_friend():
     name = raw_input("Welcome, Please enter your spy name: ")                             #ask user for name
     name_check = valid_name(name)                                                         #call valid_name function
     if name_check == True:                                                                #if valid_name returns true then ask for salutation
-        salutation= raw_input("Are they Mr. or Ms.?: ")
+        salutation= raw_input("Are they 'MR.' or 'MRS.' or 'DR.' or 'ADV.' or 'MISS.' or 'ER.'?: ")
         if salutation.upper() in SALUTAIONS:                                              #if entered salutation exist in SALUTATIONS list then code runs further
             new_friend.salutation=salutation
             new_friend.name = new_friend.salutation + " " + name
@@ -158,7 +158,7 @@ def add_friend():
 def select_friend():
 
     item_number = 0
-    
+
     #for loop iterate through friends list and print the list of friends
     for friend in friends:
         print '%d. %s aged %d with rating %.2f is online' % (item_number + 1, friend.name,
@@ -324,7 +324,7 @@ while True:
             name=raw_input("Welcome, Please enter your spy name: ")
             name_check=valid_name(name)
             if name_check==True:
-                salutation = raw_input("Should I call you Mr. or Mrs. ? :\t")
+                salutation = raw_input("Should I call you 'MR.' or 'MRS.' or 'DR.' or 'ADV.' or 'MISS.' or 'ER.'? :\t")
                 if salutation.upper() in SALUTAIONS:
 
                     spy.age = valid_age()
